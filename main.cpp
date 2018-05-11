@@ -42,14 +42,27 @@ void test_of_speed()
     std::cout << (double)(finish1 - start1)/CLOCKS_PER_SEC << std::endl;
 }
 
+template <typename T>
+void out(T &a)
+{
+    auto it = a.begin();
+    while(it != a.end()) {
+        std::cout << (*it) << ' ';
+        it++;
+    }
+    std::cout << std::endl;
+}
+
+
+
 int main() {
     XorList <int, StackAllocator<int>> a;
-    a.push_back(6);
-    a.push_back(8);
+    a.push_front(6);
+    a.push_front(8);
     int w = 9;
     a.push_back(w);
     Node <int> *x;
-    for(int i = 0; i < 10; ++i)
+    for(int i = 0; i < 100; ++i)
     {
         a.push_front(i);
         auto it = a.end();

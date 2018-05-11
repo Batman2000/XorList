@@ -29,7 +29,22 @@ class XorList
         tail->update_mask_front(new_tail);
         tail = new_tail;
     }
+    template <typename U>
+    void push_front_private(U&& _val)
+    {
 
+        size_s++;
+        Node <T> *place= alloc_1.allocate(1);
+        Node <T> *new_head = new(place) Node <T>(std::forward<U>(_val), nullptr, head);
+        if(head == nullptr)
+        {
+            head = new_head;
+            tail = new_head;
+            return;
+        }
+        head->update_mask_prev(new_head);
+        head = new_head;
+    }
 public:
     size_type size_s;
     Node <T> *head, *tail;
@@ -119,37 +134,15 @@ public:
     }
     void push_front(const T& _val)
     {
-        size_s++;
-        Node <T> *place= alloc_1.allocate(1);
-        Node <T> *new_head = new(place) Node <T>(_val, nullptr, head);
-        if(head == nullptr)
-        {
-            head = new_head;
-            tail = new_head;
-            return;
-        }
-        head->update_mask_prev(new_head);
-        head = new_head;
-        
+        push_front_private(_val);
     }
     void push_front(T&& _val)
     {
-        size_s++;
-        Node <T> *place= alloc_1.allocate(1);
-        Node <T> *new_head = new(place) Node <T>(_val, nullptr, head);
-        if(head == nullptr)
-        {
-            head = new_head;
-            tail = new_head;
-            return;
-        }
-        head->update_mask_prev(new_head);
-        head = new_head;
-        
+        push_front_private(std::move(_val));
     }
     void pop_back()
     {
-        size_s--;
+
         if(size_s == 0)
         {
             return;
@@ -159,8 +152,11 @@ public:
             alloc_1.deallocate(tail, 1);
             head = nullptr;
             tail = nullptr;
+            size_s--;
             return;
+
         }
+        size_s--;
         XorListIterator<T> it = end();
         --it;
         tail = it.previous;
@@ -171,18 +167,21 @@ public:
     }
     void pop_front()
     {
-        size_s--;
+
         if(size_s == 0)
         {
             return;
         }
+
         if(size_s == 1)
         {
             alloc_1.deallocate(head,1);
             head = nullptr;
             tail = nullptr;
+            size_s--;
             return;
         }
+        size_s--;
         XorListIterator<T> it = begin();
         it++;
         head = it.present;
