@@ -10,19 +10,19 @@ class Node
 public:
     T value;
     Node *mask;
+    void update_mask(Node* prev = nullptr, Node *next = nullptr)
+    {
+        mask = (Node *)(reinterpret_cast<uintptr_t>(prev) ^ reinterpret_cast<uintptr_t>(next));
+    }
     explicit Node(const T &val, Node *prev = nullptr, Node *next = nullptr)
     {
         value = val;
-        mask = (Node *)(reinterpret_cast<uintptr_t>(prev) ^ reinterpret_cast<uintptr_t>(next));
+        update_mask(prev, next);
     }
     explicit Node(T&& _val, Node* prev = nullptr, Node *next = nullptr)
     {
         value = _val;
-        mask = (Node *)(reinterpret_cast<uintptr_t>(prev) ^ reinterpret_cast<uintptr_t>(next));
-    }
-    void update_mask(Node* prev = nullptr, Node *next = nullptr)
-    {
-        mask = (Node *)(reinterpret_cast<uintptr_t>(prev) ^ reinterpret_cast<uintptr_t>(next));
+        update_mask(prev, next);
     }
     void update_mask_front(Node *next = nullptr)
     {

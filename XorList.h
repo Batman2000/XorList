@@ -45,6 +45,33 @@ class XorList
         head->update_mask_prev(new_head);
         head = new_head;
     }
+    template <typename U>
+    void insert_before_private(XorListIterator<T> it, U&& _val)
+    {
+        if(it == begin())
+        {
+            push_front(_val);
+            return;
+        }
+        Node <T> *place = alloc_1.allocate(1);
+        Node <T> *new_Node = new(place) Node <T>(std::forward<U>(_val), it.previous, it.present);
+        it.previous->update_mask_front(it.present);
+        it.present->update_mask_prev(it.previous);
+        it.previous->update_mask_front(new_Node);
+        it.present->update_mask_prev(new_Node);
+        size_s++;
+    }
+    template <typename U>
+    void insert_after_private(XorListIterator<T> it, U&& _val)
+    {
+        if(it.present == tail)
+        {
+            this->push_back(std::move(_val));
+            return;
+        }
+        it++;
+        this->insert_before(it, std::forward<U>(_val));
+    }
 public:
     size_type size_s;
     Node <T> *head, *tail;
@@ -82,9 +109,12 @@ public:
     XorList(const XorList& expr)
     {
         alloc_1 = expr.alloc_1;
-        head = expr.head;
-        tail = expr.tail;
-        size_s = expr.size_s;
+        auto it = expr.begin();
+        while(it != expr.end())
+        {
+            push_back((*it));
+            it++;
+        }
     }
     XorList(XorList&& expr)
     {
@@ -189,55 +219,22 @@ public:
         alloc_1.deallocate(it.previous, 1);
 
     }
+
     void insert_before(XorListIterator<T> it, const T& _val)
     {
-        if(it == begin())
-        {
-            push_front(_val);
-            return;
-        }
-        Node <T> *place = alloc_1.allocate(1);
-        Node <T> *new_Node = new(place) Node <T>(_val, it.previous, it.present);
-        it.previous->update_mask_front(it.present);
-        it.present->update_mask_prev(it.previous);
-        it.previous->update_mask_front(new_Node);
-        it.present->update_mask_prev(new_Node);
-        size_s++;
+        insert_before_private(it, _val);
     }
     void insert_before(XorListIterator<T> it, T&& _val)
     {
-        if(it == begin())
-        {
-            this->push_front(std::move(_val));
-            return;
-        }
-        Node <T> *place = alloc_1.allocate(1);
-        Node <T> *new_Node = new(place) Node <T>(std::move(_val), it.previous, it.present);
-        it.previous->update_mask_front(it.present);
-        it.present->update_mask_prev(it.previous);
-        it.previous->update_mask_front(new_Node);
-        it.present->update_mask_prev(new_Node);
-        size_s++;
+        insert_before_private(it, std::move(_val));
     }
     void insert_after(XorListIterator<T> it, const T& _val)
     {
-        if(it.present == tail)
-        {
-            this->push_back(_val);
-            return;
-        }
-        it++;
-        this->insert_before(it, _val);
+        insert_after_private(it, _val);
     }
     void insert_after(XorListIterator<T> it, T&& _val)
     {
-        if(it.present == tail)
-        {
-            this->push_back(std::move(_val));
-            return;
-        }
-        it++;
-        this->insert_before(it, std::move(_val));
+        insert_after_private(it, std::move(_val));
     }
     void erase(XorListIterator<T> it)
     {
