@@ -22,7 +22,8 @@ public:
 
 void test_of_speed()
 {
-    XorList <int, StackAllocator<int>> d;
+    StackAllocator <int> ohh;
+    XorList <int, StackAllocator<int>> d(ohh);
     clock_t start = clock();
 
     for (int i = 0; i < 1000000; ++i) {
@@ -56,7 +57,11 @@ void out(T &a)
 
 
 int main() {
-    XorList <int, StackAllocator<int>> a;
+    StackAllocator<int> ohoho;
+    XorList <int, StackAllocator<int>> a(1, 1);
+    XorList <int, StackAllocator<int>> b;
+    b = std::move(a);
+    out(b);
     a.push_front(6);
     a.push_front(8);
     int w = 9;

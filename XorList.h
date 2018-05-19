@@ -72,9 +72,9 @@ class XorList
         it++;
         this->insert_before(it, std::forward<U>(_val));
     }
-public:
     size_type size_s;
     Node <T> *head, *tail;
+public:
     XorListIterator<T> begin()
     {
         XorListIterator <T> ans(nullptr, head);
@@ -91,23 +91,32 @@ public:
     {
         return size_s;
     }
-    explicit XorList(const Allocator & alloc = Allocator()) : alloc_1(XorList<T, Allocator>::Using_Allocator())
+    void clear()
     {
         size_s = 0;
         head = nullptr;
         tail = nullptr;
     }
-    XorList(size_type count, const T& value = T(), const Allocator& alloc = Allocator())
+    explicit XorList()
     {
-        alloc_1 = alloc;
+        clear();
+    }
+    explicit XorList(Allocator & alloc) : alloc_1(alloc)
+    {
+        clear();
+    }
+    XorList(size_type count, const T& value = T())
+    {
+        clear();
         for(int i = 0; i < count; ++i)
         {
-            this->push_back(T());
+            this->push_back_private(value);
         }
 
     }
     XorList(const XorList& expr)
     {
+        clear();
         alloc_1 = expr.alloc_1;
         auto it = expr.begin();
         while(it != expr.end())
@@ -118,6 +127,7 @@ public:
     }
     XorList(XorList&& expr)
     {
+        clear();
         head = expr.head;
         tail = expr.tail;
         size_s = expr.size_s;
@@ -141,9 +151,13 @@ public:
         {
             push_back(*it);
         }
+        return *this;
     }
     XorList& operator=(XorList&& param) noexcept
     {
+        size_s = 0;
+        head = nullptr;
+        tail = nullptr;
         head = param.head;
         tail = param.tail;
         size_s = param.size_s;
@@ -151,6 +165,7 @@ public:
         param.size_s = 0;
         param.head = nullptr;
         param.tail = nullptr;
+        return *this;
     }
     void push_back(const T& _val)
     {

@@ -6,23 +6,20 @@
 #define MY_OWN_ALLOCATOR_STACKALLOCATOR_H
 #pragma once
 #include <iostream>
+#include <memory>
 #include "mvector.h"
 #include "max.h"
-template <typename T> class TrapStackAllocator
+class TrapStackAllocator
 {
 public:
-    typedef T                  value_type;
-    typedef size_t             size_type;
-    typedef ptrdiff_t          difference_type;
-    typedef value_type*        pointer;
-    typedef const value_type*  const_pointer;
-    typedef value_type*        reference;
-    typedef const value_type*  const_reference;
-    mvector <value_type *> page ;
-    value_type *cur_point;
+
+    mvector <void *> page ;
+    void* cur_point;
     size_t availible_space = 0;
-    mvector <reference > refs;
     TrapStackAllocator() {
+    }
+    TrapStackAllocator(TrapStackAllocator &a)
+    {
     }
     ~TrapStackAllocator() {
         for(int i = 0; i < page.size; ++i)
@@ -31,72 +28,31 @@ public:
         }
 
     }
-    pointer allocate(size_type _Count)
+    void* allocate(size_t v,size_t _Count)
     {
+        std::align(v, _Count, cur_point, availible_space);
         if(availible_space >= _Count)
         {
             //std::cout << "JJJJJ";
-            cur_point+=_Count;
+            cur_point = static_cast<void *>(static_cast<char*>(cur_point) + (int)_Count);
             availible_space-=_Count;
-            return (cur_point - _Count);
+            return static_cast<void *>(static_cast<char *>(cur_point) - _Count);
 
         }
-        void *q = ::operator new((max(_Count, (size_t)10000) * sizeof (value_type)));
+        void *q = ::operator new((max(_Count, (size_t)10000)));
         availible_space = max(_Count, (size_t)10000) - _Count;
-        cur_point = (pointer)q+_Count;
-        page.push_back((pointer)q);
-        //std::cout << page.capasity << std::endl;
-        return (pointer)q;
-
-    }
-
-    void deallocate(pointer _Ptr, size_type)
-    {
-
-    }
-
-/*private:
-    std::vector <std::vector<T *>> page;
-    int size = 0;
-public:
-    using value_type = T;
-    T* pointer;
-    const T* const_pointer;
-    std::size_t size_type;
-    StackAllocator() {
-        std::vector <T *> q(10000);
+        cur_point = static_cast<void *>(static_cast<char *>(q)+_Count);
         page.push_back(q);
-        size++;
-    }
-    ~StackAllocator() {
+        //std::cout << page.capasity << std::endl;
+        return q;
 
     }
-    template< class U > struct rebind {
-        typedef StackAllocator<U> other;
-    };
-    T *allocate(std::size_t n)
-    {
-        /*if(page.array[size - 1].capasity - page.array[size - 1].size >= n)
-        {
-            page.array[size - 1].size+=n;
-            return page.array[size - 1].array[page.array[size - 1].size-n];
-        }
-        else
-        {
-            std::vector <T *> q(n);
-            //q.size = n;
-            page.push_back(q);
-            return q[0];
-        }
-    }
-    void deallocate(void *d, size_t n)
+
+    void deallocate(void * _Ptr, size_t s)
     {
 
     }
-    template <typename U>
-    void destroy(U* ptr){};
-    template<typename U, class... Args>
-    void construct(U* ptr, Args&&... args){};*/
+
 };
 
 template <typename T> class StackAllocator
@@ -111,32 +67,34 @@ public:
     typedef const value_type*  const_reference;
     StackAllocator()
     {
-        true_alloc = std::make_shared<TrapStackAllocator<T>>();
+        true_alloc = std::make_shared<TrapStackAllocator>();
     }
     StackAllocator(const StackAllocator &b)
+    {
+        true_alloc = b.true_alloc;
+    }
+    template <typename U>
+    StackAllocator(StackAllocator<U> &b)
     {
         true_alloc = b.true_alloc;
     }
     StackAllocator& operator=(const StackAllocator& other)
     {
         true_alloc = other.true_alloc;
+        return *this;
     }
     template< class U > struct rebind {
         typedef StackAllocator<U> other;
     };
-    pointer allocate(size_type _Count)
-    {
-        return true_alloc->allocate(_Count);
+    T* allocate( size_t some) {
+        return static_cast<T*>(true_alloc->allocate(alignof(T), some*sizeof(T)));
     }
     void deallocate(T* place, size_t _how_many)
     {
 
     }
     ~StackAllocator() = default;
-private:
-    std::shared_ptr<TrapStackAllocator<T>> true_alloc;
+    std::shared_ptr<TrapStackAllocator> true_alloc;
 };
-
-
 
 #endif //MY_OWN_ALLOCATOR_STACKALLOCATOR_H
