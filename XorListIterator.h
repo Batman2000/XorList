@@ -9,7 +9,7 @@
 #include "node.h"
 #include "XorList.h"
 template <typename T>
-class XorListIterator : std::bidirectional_iterator_tag
+class XorListIterator
 {
 public:
     XorListIterator& operator++()
